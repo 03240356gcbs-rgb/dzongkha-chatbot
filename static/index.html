@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dzongkha AI Assistant</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Dzongkha:wght@400;500;600;700&display=swap"
+          rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #d97706;
+            --primary-hover: #b45309;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --user-msg: #2563eb;
+            --bot-msg: #334155;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            min-height: 500px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+        }
+
+        /* Header */
+
+        .chat-header {
+            background: #0f172a;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-bottom: 7px;
+        }
+
+        .chat-header p {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 12px;
+            color: #4ade80;
+            font-size: 0.75rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+        }
+
+        /* Header buttons */
+
+        .chat-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .action-btn {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+            padding: 9px 15px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        .action-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--primary);
+        }
+
+        /* Chat area */
+
+        .chat-box {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            margin: auto;
+            text-align: center;
+            max-width: 550px;
+            padding: 20px;
+        }
+
+        .welcome-icon {
+            font-family: 'Noto Sans Dzongkha', sans-serif;
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 18px;
+        }
+
+        .welcome h2 {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .suggestion-btn {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 10px 13px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        .suggestion-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Messages */
+
+        .message {
+            max-width: 82%;
+            padding: 13px 17px;
+            border-radius: 13px;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-msg);
+            color: white;
+            border-bottom-right-radius: 3px;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+            background: var(--bot-msg);
+            color: #f1f5f9;
+            font-family: 'Noto Sans Dzongkha', 'Inter', sans-serif;
+            font-size: 1.1rem;
+            border-bottom-left-radius: 3px;
+        }
+
+        .message.error {
+            color: #fecaca;
+            border: 1px solid #991b1b;
+        }
+
+        .loading {
+            align-self: flex-start;
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            padding: 10px;
+            font-style: italic;
+        }
+
+        /* Input section */
+
+        .chat-input-area {
+            padding: 18px;
+            background: #0f172a;
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        #userInput {
+            flex: 1;
+            min-width: 0;
+            padding: 14px 16px;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            color: white;
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        #userInput:focus {
+            border-color: var(--primary);
+        }
+
+        #userInput::placeholder {
+            color: var(--text-dim);
+        }
+
+        #sendButton {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 9px;
+            font-weight: 600;
+        }
+
+        #sendButton:hover {
+            background: var(--primary-hover);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-note {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            margin-top: 10px;
+        }
+
+        /* Mobile responsive */
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100dvh;
+                min-height: 0;
+                border-radius: 0;
+            }
+
+            .chat-header {
+                padding: 16px 10px;
+            }
+
+            .chat-header h1 {
+                font-size: 1.15rem;
+            }
+
+            .chat-box {
+                padding: 15px;
+            }
+
+            .message {
+                max-width: 90%;
+                font-size: 0.9rem;
+            }
+
+            .message.bot {
+                font-size: 1rem;
+            }
+
+            .chat-input-area {
+                padding: 12px;
+            }
+
+            #sendButton {
+                padding: 12px 15px;
+            }
+
+            .welcome h2 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="chat-container">
+
+        <!-- Header -->
+        <header class="chat-header">
+
+            <h1>Dzongkha AI Assistant</h1>
+
+            <p>
+                English Questions → Dzongkha Answers
+                (རྫོང་ཁ)
+            </p>
+
+            <div class="status">
+                <span class="status-dot"></span>
+                Local AI Assistant
+            </div>
+
+            <div class="chat-actions">
+
+                <button
+                    class="action-btn"
+                    id="newChatButton"
+                    type="button">
+                    ＋ New Chat
+                </button>
+
+                <button
+                    class="action-btn"
+                    id="clearChatButton"
+                    type="button">
+                    Clear Chat
+                </button>
+
+            </div>
+
+        </header>
+
+        <!-- Chat messages -->
+        <main class="chat-box" id="chatBox">
+
+            <div class="welcome" id="welcomeScreen">
+
+                <div class="welcome-icon">
+                    རྫོང་ཁ
+                </div>
+
+                <h2>How can I help you today?</h2>
+
+                <p>
+                    Ask your questions in English.
+                    Your AI assistant will understand your
+                    question and provide an answer in Dzongkha.
+                </p>
+
+                <div class="suggestions">
+
+                    <button class="suggestion-btn"
+                        data-prompt="What is artificial intelligence?">
+                        What is AI?
+                    </button>
+
+                    <button class="suggestion-btn"
+                        data-prompt="Explain machine learning in simple terms.">
+                        Explain machine learning
+                    </button>
+
+                    <button class="suggestion-btn"
+                        data-prompt="Why is education important?">
+                        Importance of education
+                    </button>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Message input -->
+        <footer class="chat-input-area">
+
+            <form id="chatForm">
+
+                <div class="input-wrapper">
+
+                    <input
+                        type="text"
+                        id="userInput"
+                        placeholder="Ask your question in English..."
+                        autocomplete="off"
+                        maxlength="5000"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        id="sendButton">
+                        Send ➤
+                    </button>
+
+                </div>
+
+            </form>
+
+            <p class="input-note">
+                Press Enter to send your message.
+            </p>
+
+        </footer>
+
+    </div>
+
+    <!-- External JavaScript -->
+    <script src="/static/script.js" defer></script>
+
+</body>
+</html>
